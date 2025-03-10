@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Security.AccessControl;
 
 namespace testing
 {
@@ -166,6 +167,12 @@ namespace testing
             caseState = cs;
             caseInstruction = ci;
         }
+        public void assignTestCase(string cs, string ci)
+        {
+            caseState = cs;
+            caseInstruction = ci;
+        }
+
         public void deleteTestCase()
         {
             caseState = null;
@@ -178,8 +185,137 @@ namespace testing
         }
     }
 
+    class testReport : testCase
+    {
+        private int reportID;
+        private string reportState;
+        private string reportInstruction;
+        private string reportResult;
+        public string ReportState
+        {
+            get { return reportState; }
+        }
+        public string ReportInstruction
+        {
+            get { return reportInstruction; }
+        }
+        public string ReportResult
+        {
+            get { return reportResult; }
+        }
+        public int ReportID
+        {
+            get { return reportID; }
+        }
+        public testReport(int r, string rs, string ri, string rr) : base(r, rs, ri)
+        {
+            reportID = r;
+            reportState = rs;
+            reportInstruction = ri;
+            reportResult = rr;
+        }
+        public void addTestReport(string rs, string ri, string rr)
+        {
+            reportState = rs;
+            reportInstruction = ri;
+            reportResult = rr;
+        }
+        public void deleteTestReport()
+        {
+            reportState = null;
+            reportInstruction = null;
+            reportResult = null;
+        }
+        public void getReportID()
+        {
+            Console.WriteLine("Enter the test report ID: ");
+            reportID = Convert.ToInt32(Console.ReadLine());
+        }
+        class testHistory : testReport
+        {
+            private int historyID;
+            private string historyState;
+            private string historyInstruction;
+            private string historyResult;
 
+            public testHistory(int r, string rs, string ri, string rr) : base(r, rs, ri, rr)
+            {
+            }
 
+            public string HistoryState
+            {
+                get { return historyState; }
+            }
+            public string HistoryInstruction
+            {
+                get { return historyInstruction; }
+            }
+            public string HistoryResult
+            {
+                get { return historyResult; }
+            }
+        }
+
+        class testStatus : testReport
+        {
+            private int statusID;
+            private string statusState;
+            private string statusInstruction;
+            private string statusResult;
+            public testStatus(int r, string rs, string ri, string rr) : base(r, rs, ri, rr)
+            {
+            }
+            public string StatusState
+            {
+                get { return statusState; }
+            }
+            public string StatusInstruction
+            {
+                get { return statusInstruction; }
+            }
+            public string StatusResult
+            {
+                get { return statusResult; }
+            }
+        }
+    }
+
+    class testComponent
+    {
+        private int compID;
+        private string compName;
+        private string compState;
+
+        public string CompName
+        {
+            get { return compName; }
+        }
+        public string CompState
+        {
+            get { return compState; }
+        }
+        public int CompID
+        {
+            get { return compID; }
+        }
+
+        public testComponent(int c, string cn, string cs)
+        {
+            compID = c;
+            compName = cn;
+            compState = cs;
+        }
+        public void addComponent(string cn, string cs)
+        {
+            compName = cn;
+            compState = cs;
+        }
+        public void deleteComponent()
+        {
+            compName = null;
+            compState = null;
+        }
+    }
 
     class Program
     {
