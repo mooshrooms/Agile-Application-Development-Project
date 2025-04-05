@@ -5,12 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Security.AccessControl;
+using System.Data.SqlClient;
+using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI;
 
 namespace testing
 {
     // Currently I do not know how to implement the database connection in C#. I will ask the teacher for help tmr.
     // Class representing a customer
-    class Customer
+    public class Customer
     {
         // Private fields for customer ID, name, role ID, and role
         private int custID;
@@ -334,7 +337,7 @@ namespace testing
     }
 
     // Class representing a test component
-    class testComponent
+    public class testComponent
     {
         // Private fields for component ID, name, and state
         private int compID;
@@ -378,15 +381,64 @@ namespace testing
         }
     }
 
-    // Main program class
+    public class databaseConnection
+    {
+        // Method to initialize the database connection
+        public void initializeDB()
+        {
+            MySql.Data.MySqlClient.MySqlConnection myConnection;
+            string myConnectionString;
+            //set the correct values for your server, user, password and database name
+            myConnectionString = "server=127.0.0.1;uid=root;pwd=12345;database=test";
+
+            try
+            {
+                myConnection = new MySql.Data.MySqlClient.MySqlConnection(myConnectionString);
+                //open a connection
+                myConnection.Open();
+
+                // create a MySQL command and set the SQL statement with parameters
+                MySqlCommand myCommand = new MySqlCommand();
+                myCommand.Connection = myConnection;
+                myCommand.CommandText = @"SELECT * FROM clients WHERE client_id = @clientId;";
+                myCommand.Parameters.AddWithValue("@clientId", clientId);
+
+                // execute the command and read the results
+                using var myReader = myCommand.ExecuteReader()
+              {
+                    while (myReader.Read())
+                    {
+                        var id = myReader.GetInt32("client_id");
+                        var name = myReader.GetString("client_name");
+                        // ...
+                    }
+                }
+                myConnection.Close();
+            }
+            catch (MySql.Data.MySqlClient.MySqlException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+    }
+
+    public class onStart
+        {
+            // Method to initialize the program
+            public void initialize()
+            {
+                Console.WriteLine("Initializing the program...");
+                // Add any initialization logic here
+
+            }
+        }
+        // Main program class
     class Program
     {
         // Main method, entry point of the program
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            Console.WriteLine("Press any key to exit.");
-            Console.ReadKey();
+            //some stuff
         }
     }
 }
