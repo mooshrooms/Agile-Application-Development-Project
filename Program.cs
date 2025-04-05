@@ -121,11 +121,17 @@ namespace testing
             projStatus = ps;
         }
         // Method to add a project
-        public void addProject(string pn, string pd, string ps, string psd)
+        public void addProject()
         {
-            projName = pn;
-            projDesc = pd;
-            projStatus = ps;
+            Console.WriteLine("Enter the project name: ");
+            string projName = Console.ReadLine();
+            Console.WriteLine("Enter the project description: ");
+            string projDesc = Console.ReadLine();
+            Console.WriteLine("Enter the project status: ");
+            string projStatus = Console.ReadLine();
+
+            Project newProject = new Project(0, projName, projDesc, projStatus);
+            // Add the new project to the array or list
         }
         // Method to delete a project
         public void deleteProject()
@@ -400,12 +406,12 @@ namespace testing
                 // create a MySQL command and set the SQL statement with parameters
                 MySqlCommand myCommand = new MySqlCommand();
                 myCommand.Connection = myConnection;
-                myCommand.CommandText = @"SELECT * FROM clients WHERE client_id = @clientId;";
-                myCommand.Parameters.AddWithValue("@clientId", clientId);
+                //myCommand.CommandText = @"SELECT * FROM clients WHERE client_id = @clientId;";
+                //myCommand.Parameters.AddWithValue("@clientId", clientId); // pseudo code, replace with actual value
 
                 // execute the command and read the results
-                using var myReader = myCommand.ExecuteReader()
-              {
+                using (var myReader = myCommand.ExecuteReader())
+                {
                     while (myReader.Read())
                     {
                         var id = myReader.GetInt32("client_id");
@@ -417,7 +423,7 @@ namespace testing
             }
             catch (MySql.Data.MySqlClient.MySqlException ex)
             {
-                MessageBox.Show(ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
     }
@@ -427,9 +433,56 @@ namespace testing
             // Method to initialize the program
             public void initialize()
             {
+                int limit = 10; // Set the limit for the number of customers
+                Customer[] customer = new Customer[limit];
+                Project[] project = new Project[limit];
                 Console.WriteLine("Initializing the program...");
                 // Add any initialization logic here
+                Console.WriteLine("Choose an option:");
+                Console.WriteLine("1. Add a user \n 2. Add a project");
+                if (Console.ReadLine() == "1")
+                {
+                // Call the method to add a user
+                // Add user logic
+                Console.WriteLine("Enter user name:");
+                string userName = Console.ReadLine();
+                Console.WriteLine("Enter user role: \n 1. Admin \n 2. User");
+                string roleInput = Console.ReadLine();
+                int roleID = 0;
+                string role = string.Empty;
 
+                if (roleInput == "1")
+                {
+                    roleID = 1;
+                    role = "Admin";
+                    Console.WriteLine("User role is Admin");
+                }
+                else if (roleInput == "2")
+                {
+                    roleID = 2;
+                    role = "User";
+                    Console.WriteLine("User role is User");
+                }
+                else
+                {
+                    Console.WriteLine("Invalid role. Please try again.");
+                }
+
+                if (roleID != 0)
+                {
+                    Customer newCustomer = new Customer(0, userName, role);
+                    newCustomer.addRole(roleID, role);
+                    // Add the new customer to the array or list
+                }
+
+            }
+                else if (Console.ReadLine() == "2")
+                {
+                // Call the method to add a project
+                Project newProject = new Project(0, "Default Name", "Default Description", "Default Status");
+                newProject.addProject();
+                }
+            
             }
         }
         // Main program class
