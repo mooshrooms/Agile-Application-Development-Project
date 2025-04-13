@@ -8,6 +8,12 @@ using System.Security.AccessControl;
 using System.Data.SqlClient;
 using MySql.Data.MySqlClient;
 using MySqlX.XDevAPI;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using testing.Data;
+using testing.Services;
+using testing.Services.Interfaces;
 
 namespace testing
 {
@@ -387,7 +393,8 @@ namespace testing
         }
     }
 
-    public class databaseConnection
+    public class
+    databaseConnection
     {
         // Method to initialize the database connection
         public void initializeDB()
@@ -429,19 +436,19 @@ namespace testing
     }
 
     public class onStart
+    {
+        // Method to initialize the program
+        public void initialize()
         {
-            // Method to initialize the program
-            public void initialize()
+            int limit = 10; // Set the limit for the number of customers
+            Customer[] customer = new Customer[limit];
+            Project[] project = new Project[limit];
+            Console.WriteLine("Initializing the program...");
+            // Add any initialization logic here
+            Console.WriteLine("Choose an option:");
+            Console.WriteLine("1. Add a user \n 2. Add a project");
+            if (Console.ReadLine() == "1")
             {
-                int limit = 10; // Set the limit for the number of customers
-                Customer[] customer = new Customer[limit];
-                Project[] project = new Project[limit];
-                Console.WriteLine("Initializing the program...");
-                // Add any initialization logic here
-                Console.WriteLine("Choose an option:");
-                Console.WriteLine("1. Add a user \n 2. Add a project");
-                if (Console.ReadLine() == "1")
-                {
                 // Call the method to add a user
                 // Add user logic
                 Console.WriteLine("Enter user name:");
@@ -476,22 +483,283 @@ namespace testing
                 }
 
             }
-                else if (Console.ReadLine() == "2")
-                {
+            else if (Console.ReadLine() == "2")
+            {
                 // Call the method to add a project
                 Project newProject = new Project(0, "Default Name", "Default Description", "Default Status");
                 newProject.addProject();
-                }
-            
             }
+
         }
-        // Main program class
+    }
+    // Main program class
     class Program
     {
-        // Main method, entry point of the program
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            //some stuff
+            // Set up configuration
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            // Set up dependency injection
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection, configuration);
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            // Get required services
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var projectService = serviceProvider.GetRequiredService<IProjectService>();
+            var testCaseService = serviceProvider.GetRequiredService<ITestCaseService>();
+
+            // Initialize database
+            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            await dbContext.Database.MigrateAsync();
+
+            // Main application loop
+            bool exit = false;
+            while (!exit)
+            {
+                Console.WriteLine("\nTesting Application");
+                Console.WriteLine("1. User Management");
+                Console.WriteLine("2. Project Management");
+                Console.WriteLine("3. Test Case Management");
+                Console.WriteLine("4. Exit");
+                Console.Write("Select an option: ");
+
+                if (int.TryParse(Console.ReadLine(), out int choice))
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            await HandleUserManagement(userService);
+                            break;
+                        case 2:
+                            await HandleProjectManagement(projectService);
+                            break;
+                        case 3:
+                            await HandleTestCaseManagement(testCaseService);
+                            break;
+                        case 4:
+                            exit = true;
+                            break;
+                        default:
+                            Console.WriteLine("Invalid option. Please try again.");
+                            break;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a number.");
+                }
+            }
+        }
+
+        private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+        {
+            // Add database context
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseMySql(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    ServerVersion.AutoDetect(configuration.GetConnectionString("DefaultConnection"))
+                ));
+
+            // Add services
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IProjectService, ProjectService>();
+            services.AddScoped<ITestCaseService, TestCaseService>();
+        }
+
+        private static async Task HandleUserManagement(IUserService userService)
+        {
+            Console.WriteLine("\nUser Management");
+            Console.WriteLine("1. Register User");
+            Console.WriteLine("2. Login");
+            Console.WriteLine("3. Update User");
+            Console.WriteLine("4. Change Password");
+            Console.WriteLine("5. Delete User");
+            Console.Write("Select an option: ");
+
+            if (int.TryParse(Console.ReadLine(), out int choice))
+            {
+                switch (choice)
+                {
+                    case 1:
+                        await RegisterUser(userService);
+                        break;
+                    case 2:
+                        await LoginUser(userService);
+                        break;
+                    // Add other user management options
+                    default:
+                        Console.WriteLine("Invalid option.");
+                        break;
+                }
+            }
+        }
+
+        private static async Task HandleProjectManagement(IProjectService projectService)
+        {
+            Console.WriteLine("\nProject Management");
+            Console.WriteLine("1. Create Project");
+            Console.WriteLine("2. View Projects");
+            Console.WriteLine("3. Update Project");
+            Console.WriteLine("4. Delete Project");
+            Console.WriteLine("5. Assign User to Project");
+            Console.Write("Select an option: ");
+
+            if (int.TryParse(Console.ReadLine(), out int choice))
+            {
+                switch (choice)
+                {
+                    case 1:
+                        await CreateProject(projectService);
+                        break;
+                    // Add other project management options
+                    default:
+                        Console.WriteLine("Invalid option.");
+                        break;
+                }
+            }
+        }
+
+        private static async Task HandleTestCaseManagement(ITestCaseService testCaseService)
+        {
+            Console.WriteLine("\nTest Case Management");
+            Console.WriteLine("1. Create Test Case");
+            Console.WriteLine("2. View Test Cases");
+            Console.WriteLine("3. Update Test Case");
+            Console.WriteLine("4. Delete Test Case");
+            Console.WriteLine("5. Execute Test Case");
+            Console.Write("Select an option: ");
+
+            if (int.TryParse(Console.ReadLine(), out int choice))
+            {
+                switch (choice)
+                {
+                    case 1:
+                        await CreateTestCase(testCaseService);
+                        break;
+                    // Add other test case management options
+                    default:
+                        Console.WriteLine("Invalid option.");
+                        break;
+                }
+            }
+        }
+
+        private static async Task RegisterUser(IUserService userService)
+        {
+            Console.Write("Enter username: ");
+            string username = Console.ReadLine();
+
+            Console.Write("Enter email: ");
+            string email = Console.ReadLine();
+
+            Console.Write("Enter password: ");
+            string password = Console.ReadLine();
+
+            var user = new User
+            {
+                Username = username,
+                Email = email,
+                RoleId = 2 // Default role: User
+            };
+
+            try
+            {
+                await userService.RegisterUserAsync(user, password);
+                Console.WriteLine("User registered successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+        private static async Task LoginUser(IUserService userService)
+        {
+            Console.Write("Enter username: ");
+            string username = Console.ReadLine();
+
+            Console.Write("Enter password: ");
+            string password = Console.ReadLine();
+
+            var user = await userService.AuthenticateUserAsync(username, password);
+            if (user != null)
+            {
+                Console.WriteLine($"Welcome, {user.Username}!");
+            }
+            else
+            {
+                Console.WriteLine("Invalid username or password.");
+            }
+        }
+
+        private static async Task CreateProject(IProjectService projectService)
+        {
+            Console.Write("Enter project name: ");
+            string name = Console.ReadLine();
+
+            Console.Write("Enter project description: ");
+            string description = Console.ReadLine();
+
+            var project = new Project
+            {
+                Name = name,
+                Description = description,
+                Status = ProjectStatus.Planning
+            };
+
+            try
+            {
+                // In a real application, you would get the current user's ID from the session
+                int currentUserId = 1; // This should come from the authenticated user
+                await projectService.CreateProjectAsync(project, currentUserId);
+                Console.WriteLine("Project created successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+        private static async Task CreateTestCase(ITestCaseService testCaseService)
+        {
+            Console.Write("Enter test case title: ");
+            string title = Console.ReadLine();
+
+            Console.Write("Enter test case description: ");
+            string description = Console.ReadLine();
+
+            Console.Write("Enter test steps: ");
+            string steps = Console.ReadLine();
+
+            Console.Write("Enter expected result: ");
+            string expectedResult = Console.ReadLine();
+
+            var testCase = new TestCase
+            {
+                Title = title,
+                Description = description,
+                Steps = steps,
+                ExpectedResult = expectedResult,
+                Priority = TestCasePriority.Medium,
+                Status = TestCaseStatus.Draft,
+                ProjectId = 1 // This should come from the selected project
+            };
+
+            try
+            {
+                await testCaseService.CreateTestCaseAsync(testCase);
+                Console.WriteLine("Test case created successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 }
