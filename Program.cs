@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using testing.Data;
 using testing.Services;
 using testing.Services.Interfaces;
+using testing.Data.Models;
 
 namespace testing
 {
@@ -402,7 +403,7 @@ namespace testing
             MySql.Data.MySqlClient.MySqlConnection myConnection;
             string myConnectionString;
             //set the correct values for your server, user, password and database name
-            myConnectionString = "server=127.0.0.1;uid=root;pwd=12345;database=test";
+            myConnectionString = "server = localhost; user = root; database = test; port = 3306; password =;" ;
 
             try
             {
