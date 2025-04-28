@@ -11,46 +11,48 @@ using System.Data;
 
 namespace software_testmng_system
 {
-    //just one the main class
+    // Represents a project entity with properties and methods.
     class Project
     {
-        private int project_id;
-        private string name;
-        private string description;
-        private string state;
+        private int project_id; // Unique identifier for the project.
+        private string name; // Name of the project.
+        private string description; // Description of the project.
+        private string state; // Current state of the project.
 
-        //properties
-        //found short version for writing properties: public int Project_id => project_id;
+        // Public property to access the project ID.
         public int Project_id
         {
             get { return project_id; }
         }
 
+        // Public property to access the project name.
         public string Name
         {
             get { return name; }
         }
 
+        // Public property to access the project description.
         public string Description
         {
             get { return description; }
         }
 
+        // Public property to access the project state.
         public string State
         {
             get { return state; }
         }
 
-        //just constructor
+        // Constructor to initialize a project object.
         public Project(int id, string nm, string dscrptn, string st)
         {
-
             project_id = id;
             name = nm;
             description = dscrptn;
             state = st;
         }
 
+        // Overrides the ToString method to provide a readable representation of the project.
         public override string ToString()
         {
             return $"Project ID: {project_id}, Name: {name}, State: {state}";
@@ -58,95 +60,65 @@ namespace software_testmng_system
     }
 
 
-    // if u read our concept of 3tier u know we will have 3 layer UI, DAL and BLL.
-    // i marked here places where they start, abviously i could made mistakes, guys please also doublecheck my code 
-
-    // Data Access Layer (DAL) - handles DB connection and queries
+    // Data Access Layer (DAL) - Handles database connection and queries.
     class DataService
     {
-        private MySqlConnection myConnection;
+        private MySqlConnection myConnection; // Connection to the MySQL database.
 
-        // constructor which initializes the database connection.don't forget to start xampp (server,mysql) firstly
+        // Constructor initializes the database connection.
         public DataService()
         {
-            String connstr;
-
-            connstr = "server=localhost;user=root;database=software_test;port=3306;password=;";
-
-            myConnection = new MySqlConnection(); //MySqlConnection included in MySQL.Data package. Install MySQL.Data firstly
-            myConnection.ConnectionString = connstr; //ConnectionString-property of MySqlConnection how to connect to the database.
-            myConnection.Open();
+            String connstr = "server=localhost;user=root;database=software_test;port=3306;password=;";
+            myConnection = new MySqlConnection();
+            myConnection.ConnectionString = connstr;
+            myConnection.Open(); // Opens the database connection.
         }
 
-
-
-        //helper method to get data from the database(execute the SQL query and return a MySqlDataReader)
-        //for list (not particular value)
+        // Helper method to fetch data from the database for a list of fields.
         private MySqlDataReader GetData(string[] fields, string table)
         {
             MySqlCommand myCommand = new MySqlCommand();
-
             myCommand.Connection = myConnection;
-            // SQL query string
-            myCommand.CommandText = "SELECT ";
 
+            // Constructs the SELECT query dynamically based on the fields.
+            myCommand.CommandText = "SELECT ";
             foreach (string s in fields)
                 myCommand.CommandText += s + ", ";
-
             myCommand.CommandText = myCommand.CommandText.Remove(myCommand.CommandText.LastIndexOf(","));
             myCommand.CommandText += " FROM " + table;
-            // CommandType requires namespace System.Data
+
             myCommand.CommandType = CommandType.Text;
-
-            // Execute the SQL request command and
-            // store the output in myReader object
-            MySqlDataReader myReader;
-            myReader = myCommand.ExecuteReader();
-
-            return myReader;
+            return myCommand.ExecuteReader(); // Executes the query and returns the result.
         }
 
-        //helper method to get data from the database(execute the SQL query and return a MySqlDataReader)
-        //for  particular value in our case Name of project
+        // Helper method to fetch data with a WHERE clause for a specific value.
         private MySqlDataReader GetDataWhereString(string[] fields, string table, string columnName, string value)
         {
             MySqlCommand myCommand = new MySqlCommand();
-
             myCommand.Connection = myConnection;
-            // SQL query string
-            myCommand.CommandText = "SELECT ";
 
+            // Constructs the SELECT query with a WHERE clause.
+            myCommand.CommandText = "SELECT ";
             foreach (string s in fields)
                 myCommand.CommandText += s + ", ";
-
             myCommand.CommandText = myCommand.CommandText.Remove(myCommand.CommandText.LastIndexOf(","));
             myCommand.CommandText += $" FROM {table} WHERE {columnName} = @value";
-            // CommandType requires namespace System.Data
+
             myCommand.CommandType = CommandType.Text;
-
-            // Add parameter to prevent SQL injection
-            myCommand.Parameters.AddWithValue("@value", value);
-
-            // Execute the SQL request command and
-            // store the output in myReader object
-            MySqlDataReader myReader;
-            myReader = myCommand.ExecuteReader();
-
-            return myReader;
+            myCommand.Parameters.AddWithValue("@value", value); // Prevents SQL injection.
+            return myCommand.ExecuteReader();
         }
 
-        // method to fetch all projects 
+        // Fetches all projects from the database.
         public List<Project> GetAllProjects()
         {
             List<Project> projectList = new List<Project>();
-
             string[] fields = { "project_id", "name", "description", "state" };
             string table = "project";
 
             using (MySqlDataReader myReader = GetData(fields, table))
             {
-                bool notEoF = myReader.Read(); // Read first row
-                while (notEoF) // Continue reading until the last row
+                while (myReader.Read()) // Reads each row from the result set.
                 {
                     int projectId = Convert.ToInt32(myReader["project_id"].ToString());
                     string name = myReader["name"].ToString();
@@ -155,15 +127,13 @@ namespace software_testmng_system
 
                     Project newProject = new Project(projectId, name, description, state);
                     projectList.Add(newProject);
-
-                    notEoF = myReader.Read(); // Read next row
                 }
             }
 
             return projectList;
         }
 
-        // method to fetch project by name
+        // Fetches a project by its name.
         public Project GetProjectByName(string projectName)
         {
             Project newProject = null;
@@ -174,27 +144,26 @@ namespace software_testmng_system
             try
             {
                 myReader = GetDataWhereString(fields, table, "name", projectName);
-                bool notEoF = myReader.Read();
-                while (notEoF)
+                if (myReader.Read()) // Reads the first matching row.
                 {
                     int projectId = Convert.ToInt32(myReader["project_id"].ToString());
                     string name = myReader["name"].ToString();
                     string description = myReader["description"].ToString();
                     string state = myReader["state"].ToString();
                     newProject = new Project(projectId, name, description, state);
-                    break;
                 }
             }
             finally
             {
                 if (myReader != null && !myReader.IsClosed)
                 {
-                    myReader.Close();
+                    myReader.Close(); // Ensures the reader is closed after use.
                 }
             }
             return newProject;
         }
 
+        // Adds a new project to the database.
         public void AddProject(Project project)
         {
             string query = "INSERT INTO project (name, description, state) VALUES (@name, @description, @state);";
@@ -203,24 +172,24 @@ namespace software_testmng_system
                 cmd.Parameters.AddWithValue("@name", project.Name);
                 cmd.Parameters.AddWithValue("@description", project.Description);
                 cmd.Parameters.AddWithValue("@state", project.State);
-                cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery(); // Executes the INSERT query.
             }
         }
 
+        // Removes a project from the database by its ID.
         public void RemoveProject(int projectId)
         {
             string query = "DELETE FROM project WHERE project_id = @projectId;";
-
             using (MySqlCommand cmd = new MySqlCommand(query, myConnection))
             {
                 cmd.Parameters.AddWithValue("@projectId", projectId);
-                cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery(); // Executes the DELETE query.
             }
         }
 
+        // Resets the auto-increment value for the project table.
         public void ResetAutoIncrement()
         {
-            // Find the highest existing ID
             string query = "SELECT MAX(project_id) FROM project;";
             int maxId = 0;
             using (MySqlCommand cmd = new MySqlCommand(query, myConnection))
@@ -228,29 +197,26 @@ namespace software_testmng_system
                 maxId = Convert.ToInt32(cmd.ExecuteScalar());
             }
 
-            // Reset auto-increment to the next highest value
             query = $"ALTER TABLE project AUTO_INCREMENT = {maxId + 1};";
             using (MySqlCommand cmd = new MySqlCommand(query, myConnection))
             {
-                cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery(); // Updates the auto-increment value.
             }
         }
     }
 
 
-    // Business Logic Layer (BLL) - handles the business logic and interacts with the Data Access Layer (DAL)
+    // Business Logic Layer (BLL) - Handles business logic and interacts with the DAL.
     class MyApplication
     {
-        //connection to the database
-        DataService myDataService;
+        DataService myDataService; // Connection to the Data Access Layer.
 
         public MyApplication()
         {
             myDataService = new DataService();
         }
 
-        //This method get all projects from the database using the GetAllProjects method of DataService
-        //It concatenates the string representation of each project (using ToString()) into a single string, separated by new lines.
+        // Retrieves all projects and concatenates their string representations.
         public string GetAllProjects()
         {
             string projects = "";
@@ -258,36 +224,38 @@ namespace software_testmng_system
                 projects += p.ToString() + "\n";
             return projects.Trim();
         }
-        //same but for particular project
+
+        // Retrieves a specific project by its name.
         public Project GetProjectDataByName(string projectName)
         {
             return myDataService.GetProjectByName(projectName);
         }
 
+        // Adds a new project with a default state.
         public void AddProject(string name, string description)
         {
             string defaultState = "To be implemented";
-            Project newProject = new Project(0, name, description, defaultState); // Assuming project_id is auto-incremented
+            Project newProject = new Project(0, name, description, defaultState);
             myDataService.AddProject(newProject);
         }
+
+        // Removes a project by its ID and resets the auto-increment value.
         public void RemoveProject(int projectId)
         {
             myDataService.RemoveProject(projectId);
             myDataService.ResetAutoIncrement();
-
         }
-
     }
 
-    // layer UI nothing to comment i guess
+    // User Interface Layer (UI) - Handles user interaction.
     class UI
     {
-        //connection with BLL
-        MyApplication myApp = new MyApplication();
+        MyApplication myApp = new MyApplication(); // Connection to the Business Logic Layer.
 
+        // Displays the main menu options.
         public void ShowMenu()
         {
-            Console.WriteLine("What would you like to do? Please enter the appropriate number:");
+            Console.WriteLine("Please enter the appropriate number for usage:");
             Console.WriteLine("1. Show all projects");
             Console.WriteLine("2. Show project details by name");
             Console.WriteLine("3. Add new project");
@@ -295,6 +263,7 @@ namespace software_testmng_system
             Console.WriteLine("5. Stop app");
         }
 
+        // Main loop to handle user commands.
         public void Run()
         {
             ShowMenu();
@@ -317,7 +286,7 @@ namespace software_testmng_system
                         if (project != null)
                             Console.WriteLine($"Project ID: {project.Project_id}, Name: {project.Name}, Description: {project.Description}, State: {project.State}");
                         else
-                            Console.WriteLine("Project not found.");
+                            Console.WriteLine("Project not found. Please try again.");
                         break;
 
                     case "3":
@@ -331,17 +300,19 @@ namespace software_testmng_system
                         break;
 
                     case "5":
-                        Console.WriteLine("Exiting...");
+                        Console.WriteLine("Closing...");
                         return;
 
                     default:
-                        Console.WriteLine("Invalid input, try again.");
+                        Console.WriteLine("Invalid input, please try again.");
                         break;
                 }
                 ShowMenu();
                 command = Console.ReadLine();
             }
         }
+
+        // Handles adding a new project.
         public void AddNewProject()
         {
             Console.Write("Enter project name: ");
@@ -350,9 +321,10 @@ namespace software_testmng_system
             string description = Console.ReadLine();
 
             myApp.AddProject(name, description);
-            Console.WriteLine("Project added successfully with default state 'To be implemented'.");
+            Console.WriteLine("Project added successfully! Default state 'To be implemented'.");
         }
 
+        // Handles removing a project by its ID.
         public void RemoveProject()
         {
             Console.Clear();
@@ -382,6 +354,7 @@ namespace software_testmng_system
     }
 
 
+    // Entry point of the application.
     class Program
     {
         static void Main(string[] args)
