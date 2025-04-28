@@ -91,7 +91,7 @@ namespace testing
     }
 
     // Class representing a project
-    class Project
+    class LocalProject
     {
         // Private fields for project ID, name, description, and status
         private int projID;
@@ -120,7 +120,7 @@ namespace testing
             get { return projID; }
         }
         // Constructor to initialize a project with ID, name, description, and status
-        public Project(int p, string pn, string pd, string ps)
+        public LocalProject(int p, string pn, string pd, string ps)
         {
             projID = p;
             projName = pn;
@@ -137,7 +137,7 @@ namespace testing
             Console.WriteLine("Enter the project status: ");
             string projStatus = Console.ReadLine();
 
-            Project newProject = new Project(0, projName, projDesc, projStatus);
+            LocalProject newProject = new LocalProject(0, projName, projDesc, projStatus);
             // Add the new project to the array or list
         }
         // Method to delete a project
@@ -487,7 +487,7 @@ namespace testing
             else if (Console.ReadLine() == "2")
             {
                 // Call the method to add a project
-                Project newProject = new Project(0, "Default Name", "Default Description", "Default Status");
+                LocalProject newProject = new LocalProject(0, "Default Name", "Default Description", "Default Status");
                 newProject.addProject();
             }
 
